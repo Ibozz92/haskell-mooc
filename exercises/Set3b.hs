@@ -90,7 +90,7 @@ mylast def (x:xs) = mylast def xs
 --   indexDefault ["a","b","c"] (-1) "d" ==> "d"
 
 indexDefault :: [a] -> Int -> a -> a
-indexDefault [] i def = def
+indexDefault [] _ def = def
 indexDefault (x:xs) 0 def = x
 indexDefault (x:xs) i def = indexDefault xs (i-1) def
 
@@ -183,8 +183,8 @@ mymaximum bigger initial (x:xs)
 -- Use recursion and pattern matching. Do not use any library functions.
 
 map2 :: (a -> b -> c) -> [a] -> [b] -> [c]
-map2 f [] bs = []
-map2 f as [] = []
+map2 f [] _ = []
+map2 f _ [] = []
 map2 f (a:as) (b:bs) = f a b:map2 f as bs
 
 ------------------------------------------------------------------------------
