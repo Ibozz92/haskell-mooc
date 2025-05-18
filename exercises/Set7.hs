@@ -169,6 +169,7 @@ instance Semigroup Velocity where
 -- What are the class constraints for the instances?
 instance Ord a => Semigroup (Set a) where
   (Set []) <> a = a
+  a <> (Set []) = a
   (Set (x:xs)) <> a = (Set xs) <> (add x a)
 instance Ord a => Monoid (Set a) where
   mempty = emptySet
