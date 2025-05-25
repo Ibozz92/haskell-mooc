@@ -133,7 +133,8 @@ lengthAtLeast n (x:xs) = lengthAtLeast (n-1) xs
 --   take 4 (chunks 3 [0..]) ==> [[0,1,2],[1,2,3],[2,3,4],[3,4,5]]
 
 chunks :: Int -> [a] -> [[a]]
-chunks n (x:xs) = todo
+chunks n [] = []
+chunks n (x:xs) = if lengthAtLeast n (x:xs) then (take n (x:xs)) : chunks n xs else []
 
 ------------------------------------------------------------------------------
 -- Ex 8: Define a newtype called IgnoreCase, that wraps a value of
@@ -149,7 +150,12 @@ chunks n (x:xs) = todo
 --   ignorecase "abC" == ignorecase "ABc"  ==>  True
 --   ignorecase "acC" == ignorecase "ABc"  ==>  False
 
-ignorecase = todo
+ignorecase = Thething String
+instance Eq (ignorecase) where
+    (==)Thething a
+
+ignorecase :: String -> IgnoreCase
+ignorecase a = Thething a
 
 ------------------------------------------------------------------------------
 -- Ex 9: Here's the Room type and some helper functions from the
