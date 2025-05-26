@@ -150,12 +150,12 @@ chunks n (x:xs) = if lengthAtLeast n (x:xs) then (take n (x:xs)) : chunks n xs e
 --   ignorecase "abC" == ignorecase "ABc"  ==>  True
 --   ignorecase "acC" == ignorecase "ABc"  ==>  False
 
-ignorecase = Thething String
-instance Eq (ignorecase) where
-    (==)Thething a
+newtype IgnoreCase = Thething String
+instance Eq IgnoreCase where
+    (==) (Thething a) (Thething b) = map toLower a == map toLower b
 
 ignorecase :: String -> IgnoreCase
-ignorecase a = Thething a
+ignorecase = Thething
 
 ------------------------------------------------------------------------------
 -- Ex 9: Here's the Room type and some helper functions from the
@@ -199,4 +199,8 @@ play room (d:ds) = case move room d of Nothing -> [describe room]
                                        Just r -> describe room : play r ds
 
 maze :: Room
-maze = todo
+maze = maze1
+
+maze1 = Room "Maze" [("Left",maze2), ("Right",maze3)]
+maze2 = Room "Deeper in the maze" [("Left",maze3),("Right",maze1)]
+maze3 = Room "Elsewhere in the maze" [("Left",maze1),("Right",maze2)]
