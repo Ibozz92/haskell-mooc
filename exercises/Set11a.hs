@@ -25,14 +25,15 @@ import Mooc.Todo
 -- first line should be HELLO and the second one WORLD
 
 hello :: IO ()
-hello = todo
+hello = putStrLn "HELLO\nWORLD"
 
 ------------------------------------------------------------------------------
 -- Ex 2: define the IO operation greet that takes a name as an
 -- argument and prints a line "HELLO name".
 
 greet :: String -> IO ()
-greet name = todo
+greet name = do 
+    putStrLn ("HELLO "++name)
 
 ------------------------------------------------------------------------------
 -- Ex 3: define the IO operation greet2 that reads a name from the
@@ -42,7 +43,9 @@ greet name = todo
 -- Try to use the greet operation in your solution.
 
 greet2 :: IO ()
-greet2 = todo
+greet2 = do
+    a <- getLine
+    greet a
 
 ------------------------------------------------------------------------------
 -- Ex 4: define the IO operation readWords n which reads n lines from
@@ -56,7 +59,16 @@ greet2 = todo
 --   ["alice","bob","carl"]
 
 readWords :: Int -> IO [String]
-readWords n = todo
+readWords a = do
+    lis <- hReadWords a
+    return (sort lis)
+
+hReadWords :: Int -> IO [String]
+hReadWords 0 = return []
+hReadWords n = do
+    a <- getLine
+    b <- readWords (n-1)
+    return (a : b)
 
 ------------------------------------------------------------------------------
 -- Ex 5: define the IO operation readUntil f, which reads lines from
@@ -73,13 +85,19 @@ readWords n = todo
 --   ["bananas","garlic","pakchoi"]
 
 readUntil :: (String -> Bool) -> IO [String]
-readUntil f = todo
+readUntil f = do
+    a <- getLine
+    if f a then do
+        return []
+    else do
+        b <- readUntil f
+        return (a : b)
 
 ------------------------------------------------------------------------------
 -- Ex 6: given n, print the numbers from n to 0, one per line
 
 countdownPrint :: Int -> IO ()
-countdownPrint n = todo
+countdownPrint n = mapM_ print [n,(n-1)..0]
 
 ------------------------------------------------------------------------------
 -- Ex 7: isums n should read n numbers from the user (one per line) and
@@ -94,7 +112,15 @@ countdownPrint n = todo
 --   5. produces 9
 
 isums :: Int -> IO Int
-isums n = todo
+isums = hisums 0
+
+hisums :: Int -> Int -> IO Int
+hisums n 0 = return n
+hisums currentnum remaining = do
+    newnum <- readLn
+    let result = currentnum + newnum
+    print result
+    hisums result (remaining-1)
 
 ------------------------------------------------------------------------------
 -- Ex 8: when is a useful function, but its first argument has type
@@ -102,7 +128,9 @@ isums n = todo
 -- argument has type IO Bool.
 
 whenM :: IO Bool -> IO () -> IO ()
-whenM cond op = todo
+whenM cond op = do
+    b <- cond
+    when b op
 
 ------------------------------------------------------------------------------
 -- Ex 9: implement the while loop. while condition operation should
@@ -122,7 +150,12 @@ ask = do putStrLn "Y/N?"
          return $ line == "Y"
 
 while :: IO Bool -> IO () -> IO ()
-while cond op = todo
+while cond op = do
+    b <- cond
+    if b then do 
+        op
+        while cond op
+    else do return ()
 
 ------------------------------------------------------------------------------
 -- Ex 10: given a string and an IO operation, print the string, run
@@ -142,4 +175,8 @@ while cond op = todo
 --     4. returns the line read from the user
 
 debug :: String -> IO a -> IO a
-debug s op = todo
+debug s op = do
+    putStrLn s
+    thething <- op
+    putStrLn s
+    return thething
