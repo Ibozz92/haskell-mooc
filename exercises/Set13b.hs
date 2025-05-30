@@ -42,7 +42,9 @@ test = do
   return (x<10)
 
 ifM :: Monad m => m Bool -> m a -> m a -> m a
-ifM opBool opThen opElse = todo
+ifM opBool opThen opElse = do
+  b <- opBool
+  if b then opThen else opElse
 
 ------------------------------------------------------------------------------
 -- Ex 2: the standard library function Control.Monad.mapM defines a
@@ -84,7 +86,12 @@ perhapsIncrement True x = modify (+x)
 perhapsIncrement False _ = return ()
 
 mapM2 :: Monad m => (a -> b -> m c) -> [a] -> [b] -> m [c]
-mapM2 op xs ys = todo
+mapM2 _ [] _ = return []
+mapM2 _ _ [] = return []
+mapM2 op (x:xs) (y:ys) = do
+  start <- op x y
+  rest <- mapM2 op xs ys
+  return (start:rest)
 
 ------------------------------------------------------------------------------
 -- Ex 3: Finding paths.
@@ -142,7 +149,11 @@ maze1 = [("Entry",["Pit","Corridor 1"])
 
 
 visit :: [(String,[String])] -> String -> State [String] ()
-visit maze place = todo
+visit maze place = do
+  visited <- get
+  if elem place visited then return () else do
+    modify (place:)
+    mapM_ (visit maze) (lookup place maze)
 
 -- Now you should be able to implement path using visit. If you run
 -- visit on a place using an empty state, you'll get a state that

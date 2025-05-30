@@ -169,7 +169,11 @@ instance Applicative Logger where
   (<*>) = ap
 
 countAndLog :: Show a => (a -> Bool) -> [a] -> Logger Int
-countAndLog = todo
+countAndLog checkvalidity lis = foldl (\ a b -> a >>= (updateLogger checkvalidity b)) (return 0) lis
+
+updateLogger :: Show a => (a -> Bool) -> a -> Int -> Logger Int
+updateLogger fnc val numb = if fnc val then Logger [show val] (numb+1) else Logger [] numb
+
 
 ------------------------------------------------------------------------------
 -- Ex 5: You can find the Bank and BankOp code from the course
@@ -186,7 +190,9 @@ exampleBank :: Bank
 exampleBank = (Bank (Map.fromList [("harry",10),("cedric",7),("ginny",1)]))
 
 balance :: String -> BankOp Int
-balance accountName = todo
+balance accountName = BankOp (\(Bank b) -> case Map.lookup accountName b of
+                                    (Just a) -> (a,Bank b)
+                                    Nothing -> (0,Bank b))
 
 ------------------------------------------------------------------------------
 -- Ex 6: Using the operations balance, withdrawOp and depositOp, and
@@ -204,7 +210,7 @@ balance accountName = todo
 --     ==> ((),Bank (fromList [("cedric",7),("ginny",1),("harry",10)]))
 
 rob :: String -> String -> BankOp ()
-rob from to = todo
+rob from to = balance from +> withdrawOp from +> depositOp to
 
 ------------------------------------------------------------------------------
 -- Ex 7: using the State monad, write the operation `update` that first
@@ -216,7 +222,9 @@ rob from to = todo
 --    ==> ((),7)
 
 update :: State Int ()
-update = todo
+update = do
+  a <- get
+  put (a*2+1)
 
 ------------------------------------------------------------------------------
 -- Ex 8: Checking that parentheses are balanced with the State monad.
@@ -244,7 +252,13 @@ update = todo
 --   parensMatch "(()))("      ==> False
 
 paren :: Char -> State Int ()
-paren = todo
+paren c = do
+  num <- get
+  if num==(-1) then put (-1) else do
+    if c=='(' then
+      put (num+1)
+    else 
+      put (num-1)
 
 parensMatch :: String -> Bool
 parensMatch s = count == 0
@@ -275,7 +289,15 @@ parensMatch s = count == 0
 -- PS. The order of the list of pairs doesn't matter
 
 count :: Eq a => a -> State [(a,Int)] ()
-count x = todo
+count x = do
+  oldlis <- get
+  case lookup x oldlis of
+    (Just a) -> put (myInsert x (a+1) oldlis)
+    Nothing -> put (myInsert x 1 oldlis)
+
+myInsert :: Eq k => k -> v -> [(k,v)] -> [(k,v)]
+myInsert k v [] = [(k,v)]
+myInsert k v ((a,b):xs) = if a==k then (k,v):xs else (a,b):myInsert k v xs
 
 ------------------------------------------------------------------------------
 -- Ex 10: Implement the operation occurrences, which
@@ -297,4 +319,9 @@ count x = todo
 --    ==> (4,[(2,1),(3,1),(4,1),(7,1)])
 
 occurrences :: (Eq a) => [a] -> State [(a,Int)] Int
-occurrences xs = todo
+occurrences [] = do
+  a <- get
+  return (length a)
+occurrences (x:xs) = do
+  count x
+  occurrences xs
