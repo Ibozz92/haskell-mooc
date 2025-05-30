@@ -47,19 +47,27 @@ readNames s =
 -- (NB! There are obviously other corner cases like the inputs " " and
 -- "a b c", but you don't need to worry about those here)
 split :: String -> Maybe (String,String)
-split = todo
+split str
+  |elem ' ' str = do
+    let w = words str
+    return (w !! 0, w !! 1)
+  |otherwise = Nothing
 
 -- checkNumber should take a pair of two strings and return them
 -- unchanged if they don't contain numbers. Otherwise Nothing is
 -- returned.
 checkNumber :: (String, String) -> Maybe (String, String)
-checkNumber = todo
+checkNumber (a,b)
+  |or (map (`elem` a) ("0123456789")) || or (map (`elem` b) ("0123456789")) = Nothing
+  |otherwise = Just (a,b)
 
 -- checkCapitals should take a pair of two strings and return them
 -- unchanged if both start with a capital letter. Otherwise Nothing is
 -- returned.
 checkCapitals :: (String, String) -> Maybe (String, String)
-checkCapitals (for,sur) = todo
+checkCapitals (for,sur)
+  |isUpper (for !! 0) && isUpper (sur !! 0) = Just (for,sur)
+  |otherwise = Nothing
 
 ------------------------------------------------------------------------------
 -- Ex 2: Given a list of players and their scores (as [(String,Int)]),
@@ -86,7 +94,13 @@ checkCapitals (for,sur) = todo
 --     ==> Just "a"
 
 winner :: [(String,Int)] -> String -> String -> Maybe String
-winner scores player1 player2 = todo
+winner scores player1 player2 = do
+  a <- lookup player1 scores
+  b <- lookup player2 scores
+  if a>=b then do
+    return player1
+  else do
+    return player2
 
 ------------------------------------------------------------------------------
 -- Ex 3: given a list of indices and a list of values, return the sum
@@ -103,8 +117,25 @@ winner scores player1 player2 = todo
 --  selectSum [0..10] [4,6,9,20]
 --    Nothing
 
+safeIndex :: [a] -> Int -> Maybe a
+safeIndex [] _ = Nothing
+safeIndex (x:xs) a = do
+  if a<0 then do Nothing else if a==0 then
+    return x
+  else do
+    safeIndex xs (a-1)
+
+maybeSum :: (Num a) => [Maybe a] -> Maybe a
+maybeSum [] = Just 0
+maybeSum (x:xs) = do 
+  a <- x
+  b <- maybeSum xs
+  return (a+b)
+
 selectSum :: Num a => [a] -> [Int] -> Maybe a
-selectSum xs is = todo
+selectSum xs is = do
+  let lis = map (safeIndex xs) is
+  maybeSum lis
 
 ------------------------------------------------------------------------------
 -- Ex 4: Here is the Logger monad from the course material. Implement
