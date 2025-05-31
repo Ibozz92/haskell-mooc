@@ -367,7 +367,8 @@ instance Monad SL where
   op >>= f = SL h
     where h state0 = let (val,state1,logmsg) = runSL op state0
                          op2 = f val
-                     in runSL op2 state1
+                         (a,b,c) = runSL op2 state1
+                         in (a,b,logmsg++c) 
 
 ------------------------------------------------------------------------------
 -- Ex 9: Implement the operation mkCounter that produces the IO operations
