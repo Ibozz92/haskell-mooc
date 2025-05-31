@@ -153,14 +153,21 @@ visit maze place = do
   visited <- get
   if elem place visited then return () else do
     modify (place:)
-    mapM_ (visit maze) (lookup place maze)
+    visitall maze ((\(Just a) -> a)(lookup place maze))
+
+visitall :: [(String,[String])] -> [String] -> State [String] ()
+visitall _ [] = return ()
+visitall maze (place:places) = do
+  visit maze place
+  visitall maze places
 
 -- Now you should be able to implement path using visit. If you run
 -- visit on a place using an empty state, you'll get a state that
 -- lists all the places that are reachable from the starting place.
 
 path :: [(String,[String])] -> String -> String -> Bool
-path maze place1 place2 = todo
+path maze place1 place2 = let b = (snd (runState (visit maze place1) [])) in
+  elem place2 b
 
 ------------------------------------------------------------------------------
 -- Ex 4: Given two lists, ks and ns, find numbers i and j from ks,
@@ -176,7 +183,10 @@ path maze place1 place2 = todo
 -- PS. The tests don't care about the order of results.
 
 findSum2 :: [Int] -> [Int] -> [(Int,Int,Int)]
-findSum2 ks ns = todo
+findSum2 ks ns = do
+  i <- ks
+  j <- ks
+  if elem (i+j) ns then [(i,j,i+j)] else []
 
 ------------------------------------------------------------------------------
 -- Ex 5: compute all possible sums of elements from the given
@@ -197,7 +207,10 @@ findSum2 ks ns = todo
 --     ==> [7,3,5,1,6,2,4,0]
 
 allSums :: [Int] -> [Int]
-allSums xs = todo
+allSums [] = [0]
+allSums (x:xs) = do
+  i <- [x,0]
+  map (i+) (allSums xs)
 
 ------------------------------------------------------------------------------
 -- Ex 6: the standard library defines the function
