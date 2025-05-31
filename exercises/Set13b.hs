@@ -240,7 +240,8 @@ sumBounded :: Int -> [Int] -> Maybe Int
 sumBounded k xs = foldM (f1 k) 0 xs
 
 f1 :: Int -> Int -> Int -> Maybe Int
-f1 k acc x = todo
+f1 k acc x = let thesum = acc+x in
+  if thesum>k then Nothing else Just thesum
 
 -- sumNotTwice computes the sum of a list, but counts only the first
 -- occurrence of each value.
@@ -254,7 +255,13 @@ sumNotTwice :: [Int] -> Int
 sumNotTwice xs = fst $ runState (foldM f2 0 xs) []
 
 f2 :: Int -> Int -> State [Int] Int
-f2 acc x = todo
+f2 acc x = do
+  already <- get
+  if elem x already then do
+    return acc
+  else do
+    modify (x:)
+    return (x+acc)
 
 ------------------------------------------------------------------------------
 -- Ex 7: here is the Result type from Set12. Implement a Monad Result
@@ -279,7 +286,9 @@ data Result a = MkResult a | NoResult | Failure String deriving (Show,Eq)
 
 instance Functor Result where
   -- The same Functor instance you used in Set12 works here.
-  fmap = todo
+  fmap f (MkResult a) = MkResult (f a)
+  fmap _ NoResult = NoResult
+  fmap _ (Failure s) = Failure s
 
 -- This is an Applicative instance that works for any monad, you
 -- can just ignore it for now. We'll get back to Applicative later.
@@ -289,8 +298,11 @@ instance Applicative Result where
 
 instance Monad Result where
   -- implement return and >>=
-  return = todo
-  (>>=) = todo
+  return = MkResult
+  (>>=) aresult func = case aresult of
+    (MkResult a) -> func a
+    NoResult -> NoResult
+    (Failure s) -> (Failure s)
 
 ------------------------------------------------------------------------------
 -- Ex 8: Here is the type SL that combines the State and Logger
@@ -337,8 +349,11 @@ modifySL :: (Int->Int) -> SL ()
 modifySL f = SL (\s -> ((),f s,[]))
 
 instance Functor SL where
+  -- fmap :: (a -> b) -> SL a -> SL b
+  -- fmap :: ((Int -> a,Int,String) -> (Int -> (b,Int,String))) -> SL a -> SL b
   -- implement fmap
-  fmap = todo
+  fmap newfunc (SL func) = SL (f.func)
+                           where f (a,b,c) = ((newfunc a), b, c)
 
 -- This is an Applicative instance that works for any monad, you
 -- can just ignore it for now. We'll get back to Applicative later.
@@ -348,8 +363,11 @@ instance Applicative SL where
 
 instance Monad SL where
   -- implement return and >>=
-  return = todo
-  (>>=) = todo
+  return x = SL (\y -> (x,y,[]))
+  op >>= f = SL h
+    where h state0 = let (val,state1,logmsg) = runSL op state0
+                         op2 = f val
+                     in runSL op2 state1
 
 ------------------------------------------------------------------------------
 -- Ex 9: Implement the operation mkCounter that produces the IO operations
