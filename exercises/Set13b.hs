@@ -401,3 +401,4 @@ mkCounter = do
   let inc = modifyIORef r (+1)
   let get = readIORef r
   return (inc,get)
+--test
