@@ -76,12 +76,17 @@ getAllQuery = Query (T.pack "SELECT account, amount FROM events;")
 -- NOTE! Do not add anything to the name, otherwise you'll get weird
 -- test failures later.
 openDatabase :: String -> IO Connection
-openDatabase = todo
+openDatabase filename = do
+  db <- open filename
+  query_ db initQuery :: IO [[String]]
+  return db
 
 -- given a db connection, an account name, and an amount, deposit
 -- should add an (account, amount) row into the database
 deposit :: Connection -> T.Text -> Int -> IO ()
-deposit = todo
+deposit db name amount = do
+  query db depositQuery (name,amount) :: IO [(T.Text,Int)]
+  return ()
 
 ------------------------------------------------------------------------------
 -- Ex 2: Fetching an account's balance. Below you'll find
@@ -112,7 +117,9 @@ balanceQuery :: Query
 balanceQuery = Query (T.pack "SELECT amount FROM events WHERE account = ?;")
 
 balance :: Connection -> T.Text -> IO Int
-balance = todo
+balance db account = do
+  a <- query db balanceQuery [account] :: IO [[Int]]
+  return $ sum (map sum a)
 
 ------------------------------------------------------------------------------
 -- Ex 3: Now that we have the database part covered, let's think about
@@ -151,7 +158,15 @@ parseInt :: T.Text -> Maybe Int
 parseInt = readMaybe . T.unpack
 
 parseCommand :: [T.Text] -> Maybe Command
-parseCommand = todo
+parseCommand [a, b] = case T.unpack a of
+                      "balance" -> Just (Balance b)
+                      _ -> Nothing
+parseCommand [a, b, c] = case T.unpack a of
+                      "deposit" -> case parseInt c of 
+                                   (Just intread) -> Just (Deposit b intread)
+                                   Nothing -> Nothing
+                      _ -> Nothing
+parseCommand _ = Nothing
 
 ------------------------------------------------------------------------------
 -- Ex 4: Running commands. Implement the IO operation perform that takes a
