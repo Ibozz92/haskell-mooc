@@ -238,7 +238,23 @@ data Expression = Plus Arg Arg | Minus Arg Arg
   deriving (Show, Eq)
 
 parseExpression :: String -> Validation Expression
-parseExpression = todo
+parseExpression s = let w = words s in liftA2 (seq) (check (length w == 3) ("Invalid expression: "++s) (Plus (Number 0) (Number 0))) (hParseExpression w)
+
+hParseExpression :: [String] -> Validation Expression
+hParseExpression [a,b,c] = liftA2 (seq) (check (elem b ["+","-"]) ("Unknown operator: "++b) (Plus (Number 0) (Number 0))) (hhParseExpression [a,b,c])
+hParseExpression _ = check (True) ("") (Plus (Number 0) (Number 0))
+
+hhParseExpression :: [String] -> Validation Expression
+hhParseExpression [a,b,c] = let 
+                            numa = (readMaybe a :: Maybe Int)
+                            numc = (readMaybe c :: Maybe Int)
+                            checknum x maybex = (check (myIsJust (maybex)) ("Invalid number: "++x) (Number ((\(Just a) -> a)maybex)))
+                            checkvar (y:ys) = (check ((isAlpha y) && null ys) ("Invalid variable: "++(y:ys)) (Variable y))
+                            totalcheck z maybez = (checknum z maybez) <|> (checkvar z) in
+                            case b of 
+                            "+" -> liftA2 (Plus) (totalcheck a numa) (totalcheck c numc)
+                            _ -> liftA2 (Minus) (totalcheck a numa) (totalcheck c numc)
+
 
 ------------------------------------------------------------------------------
 -- Ex 10: The Priced T type tracks a value of type T, and a price
@@ -263,11 +279,11 @@ data Priced a = Priced Int a
   deriving (Show, Eq)
 
 instance Functor Priced where
-  fmap = todo
+  fmap f (Priced a b) = Priced a (f b)
 
 instance Applicative Priced where
-  pure = todo
-  liftA2 = todo
+  pure = Priced 0
+  liftA2 f (Priced a b) (Priced c d) = Priced (a+c) (f b d)
 
 ------------------------------------------------------------------------------
 -- Ex 11: This and the next exercise will use a copy of the
