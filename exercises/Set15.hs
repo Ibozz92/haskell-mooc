@@ -111,13 +111,15 @@ data Address = Address String String String
 
 validateAddress :: String -> String -> String -> Validation Address
 validateAddress streetName streetNumber postCode = let checkedname = check (length streetName <= 20) "Invalid street name" streetName
-                                                       checkednumber = check (myIsJust ((readMaybe streetNumber) :: Maybe Int)) "Invalid street number" streetNumber
-                                                       checkedpostcode = check (length postCode == 5 && myIsJust ((readMaybe postCode) :: Maybe Int)) "Invalid postcode" postCode in
+                                                       checkednumber = check (isDigits streetNumber) "Invalid street number" streetNumber
+                                                       checkedpostcode = check (length postCode == 5 && isDigits postCode) "Invalid postcode" postCode in
                                                    liftA3 (Address) (checkedname) (checkednumber) (checkedpostcode)
 
 myIsJust :: (Maybe a) -> Bool
 myIsJust (Just a) = True
 myIsJust _ = False
+
+isDigits a = and (map isDigit a)
 
 ------------------------------------------------------------------------------
 -- Ex 6: Given the names, ages and employment statuses of two
