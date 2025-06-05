@@ -36,7 +36,7 @@ sumTwoMaybes = liftA2 (+)
 --         "code is not suffering","code is not life"]
 
 statements :: [String] -> [String] -> [String]
-statements = todo
+statements a b = liftA2 (++) (liftA2 (++) a [" is ", " is not "]) b 
 
 ------------------------------------------------------------------------------
 -- Ex 3: A simple calculator with error handling. Given an operation
@@ -53,8 +53,17 @@ statements = todo
 --  calculator "doubl" "7"    ==> Nothing
 --  calculator "double" "7x"  ==> Nothing
 
+toOp :: String -> Maybe (Int -> Int)
+toOp s = case s of 
+         "negate" -> Just negate
+         "double" -> Just (*2)
+         _ -> Nothing
+
+
 calculator :: String -> String -> Maybe Int
-calculator = todo
+calculator s n = case (toOp s) of
+                 (Just a) -> liftA a (readMaybe n)
+                 Nothing -> Nothing
 
 ------------------------------------------------------------------------------
 -- Ex 4: Safe division. Implement the function validateDiv that
@@ -71,7 +80,7 @@ calculator = todo
 --  validateDiv 0 3 ==> Ok 0
 
 validateDiv :: Int -> Int -> Validation Int
-validateDiv = todo
+validateDiv num den = liftA2 (div) (pure num) (check (den/=0) "Division by zero!" den)
 
 ------------------------------------------------------------------------------
 -- Ex 5: Validating street addresses. A street address consists of a
@@ -101,7 +110,14 @@ data Address = Address String String String
   deriving (Show,Eq)
 
 validateAddress :: String -> String -> String -> Validation Address
-validateAddress streetName streetNumber postCode = todo
+validateAddress streetName streetNumber postCode = let checkedname = check (length streetName <= 20) "Invalid street name" streetName
+                                                       checkednumber = check (myIsJust ((readMaybe streetNumber) :: Maybe Int)) "Invalid street number" streetNumber
+                                                       checkedpostcode = check (length postCode == 5 && myIsJust ((readMaybe postCode) :: Maybe Int)) "Invalid postcode" postCode in
+                                                   liftA3 (Address) (checkedname) (checkednumber) (checkedpostcode)
+
+myIsJust :: (Maybe a) -> Bool
+myIsJust (Just a) = True
+myIsJust _ = False
 
 ------------------------------------------------------------------------------
 -- Ex 6: Given the names, ages and employment statuses of two
@@ -123,7 +139,7 @@ data Person = Person String Int Bool
 twoPersons :: Applicative f =>
   f String -> f Int -> f Bool -> f String -> f Int -> f Bool
   -> f [Person]
-twoPersons name1 age1 employed1 name2 age2 employed2 = todo
+twoPersons name1 age1 employed1 name2 age2 employed2 = liftA2 (\x y -> [x,y]) (liftA3 (Person) name1 age1 employed1) (liftA3 (Person) name2 age2 employed2)
 
 ------------------------------------------------------------------------------
 -- Ex 7: Validate a String that's either a Bool or an Int. The return
@@ -143,7 +159,8 @@ twoPersons name1 age1 employed1 name2 age2 employed2 = todo
 --  boolOrInt "Falseb"  ==> Errors ["Not a Bool","Not an Int"]
 
 boolOrInt :: String -> Validation (Either Bool Int)
-boolOrInt = todo
+boolOrInt nb = (check (myIsJust ((readMaybe nb) :: Maybe Bool)) "Not a Bool" (Left (read nb))) <|> (check (myIsJust ((readMaybe nb) :: Maybe Int)) "Not an Int" (Right (read nb)))
+
 
 ------------------------------------------------------------------------------
 -- Ex 8: Improved phone number validation. Implement the function
@@ -167,7 +184,17 @@ boolOrInt = todo
 --    ==> Errors ["Too long"]
 
 normalizePhone :: String -> Validation String
-normalizePhone = todo
+normalizePhone xs = let s = rmWhitespace xs in liftA2 (seq) (check (length s <= 10) ("Too long") s) (hNormalizePhone s)
+
+hNormalizePhone :: String -> Validation String
+hNormalizePhone "" = pure ""
+hNormalizePhone (x:xs) = liftA2 (:) (check (isDigit x) ("Invalid character: "++[x]) x) (hNormalizePhone xs)
+
+rmWhitespace :: String -> String
+rmWhitespace "" = ""
+rmWhitespace (x:xs) = case x of 
+                      ' ' -> rmWhitespace xs
+                      _ -> x:rmWhitespace xs
 
 ------------------------------------------------------------------------------
 -- Ex 9: Parsing expressions. The Expression type describes an
