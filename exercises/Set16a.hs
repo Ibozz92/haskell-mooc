@@ -5,6 +5,8 @@ import Test.QuickCheck
 
 import Data.List
 
+--Comment
+
 ------------------------------------------------------------------------------
 -- Ex 1: Write a Property that checks that a given list is sorted (in
 -- ascending order)
